@@ -1,0 +1,15 @@
+meta {
+  name: get_light_states
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:12345/states
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: Bearer asdfghjkl_light_control
+}

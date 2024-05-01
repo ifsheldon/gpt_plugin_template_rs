@@ -1,0 +1,21 @@
+meta {
+  name: light_control
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:12345/light_control
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: Bearer asdfghjkl_light_control
+}
+
+body:json {
+  {
+    "action": "TurnOn"
+  }
+}

@@ -1,0 +1,21 @@
+meta {
+  name: light_color
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:12345/light_color
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: Bearer asdfghjkl_light_control
+}
+
+body:json {
+  {
+    "action": "ToRed"
+  }
+}

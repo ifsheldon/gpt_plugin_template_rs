@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "gpt_plugin_template_rust",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
