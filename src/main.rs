@@ -3,7 +3,6 @@ use axum::http::Method;
 use axum::Router;
 use axum::routing::{get, get_service, post};
 use clap::Parser;
-use log::{error, info};
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 use tower::limit::ConcurrencyLimitLayer;
@@ -11,6 +10,8 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::limit::RequestBodyLimitLayer;
 use tower_http::services::ServeFile;
 use tower_http::validate_request::ValidateRequestHeaderLayer;
+use tower_http::trace::TraceLayer;
+use tracing::{Level, span, error, info};
 use crate::states::light_states;
 use crate::utils::{Args, get_or_default_light_states, handle_signal};
 use crate::control::{handle_light_color_request, handle_light_control_request};
@@ -28,8 +29,11 @@ async fn legal_info() -> &'static str {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    env_logger::init();
-    info!("{:?}", args);
+    tracing_subscriber::fmt().with_max_level(Level::DEBUG).init();
+    let span = span!(Level::INFO, "light_control_server");
+    let guard = span.enter();
+    info!("Starting light control server on port {}", args.port);
+    drop(guard); // drop the guard to prevent the span from being captured by the signal handler
     // simple authorization
     let validate_bearer = ValidateRequestHeaderLayer::bearer(AUTH_STR);
     // allow requests from any origin
@@ -53,13 +57,14 @@ async fn main() {
         .route("/openapi.yaml", get_service(ServeFile::new("src/backend/metadata_files/openapi.yaml")))
         .route("/.well-known/ai-plugin.json", get_service(ServeFile::new("src/backend/metadata_files/ai-plugin.json")))
         // for all routes
-        .layer(allow_cors)
+        .layer(limit_concurrency)
         .layer(limit_body)
-        .layer(limit_concurrency);
+        .layer(allow_cors)
+        .layer(TraceLayer::new_for_http());
 
     let listener = TcpListener::bind(format!("0.0.0.0:{}", args.port)).await.unwrap();
     let server = axum::serve(listener, app);
-    let graceful = server.with_graceful_shutdown(handle_signal(shared_light_states));
+    let graceful = server.with_graceful_shutdown(handle_signal(shared_light_states, span));
     if let Err(e) = graceful.await {
         error!("Server error: {}", e);
     }

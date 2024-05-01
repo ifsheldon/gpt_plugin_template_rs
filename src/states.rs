@@ -1,6 +1,7 @@
 use axum::extract::State;
 use axum::Json;
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 use crate::utils::SharedLightStates;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -32,6 +33,7 @@ impl Default for LightStates {
     }
 }
 
+#[instrument]
 pub async fn light_states(State(states): State<SharedLightStates>) -> Json<LightStates> {
     Json(states.read().await.clone())
 }

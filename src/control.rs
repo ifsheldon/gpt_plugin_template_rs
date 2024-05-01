@@ -1,7 +1,7 @@
 use axum::extract::State;
 use axum::Json;
-use log::info;
 use serde::{Deserialize, Serialize};
+use tracing::{instrument, info};
 use crate::states::{LightColor, LightStatus};
 use crate::utils::SharedLightStates;
 
@@ -30,6 +30,8 @@ pub struct LightControlRequest {
     pub action: LightAction,
 }
 
+
+#[instrument]
 pub async fn handle_light_color_request(State(states): State<SharedLightStates>,
                                         Json(request): Json<LightColorRequest>) -> String {
     info!("Light color request: {:?}", request);
@@ -58,6 +60,7 @@ pub async fn handle_light_color_request(State(states): State<SharedLightStates>,
     }
 }
 
+#[instrument]
 pub async fn handle_light_control_request(State(states): State<SharedLightStates>,
                                           Json(request): Json<LightControlRequest>) -> String {
     info!("Light control request: {:?}", request);
