@@ -34,15 +34,6 @@ async fn main() {
     let guard = span.enter();
     info!("Starting light control server on port {}", args.port);
     drop(guard); // drop the guard to prevent the span from being captured by the signal handler
-    // simple authorization
-    let validate_bearer = ValidateRequestHeaderLayer::bearer(AUTH_STR);
-    // allow requests from any origin
-    let allow_cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST])
-        .allow_origin(Any);
-    // simple defense against DoS attacks
-    let limit_body = RequestBodyLimitLayer::new(1024 * 1024); // 1MB
-    let limit_concurrency = ConcurrencyLimitLayer::new(128);
 
     let shared_light_states = Arc::new(RwLock::new(get_or_default_light_states().await));
     let app = Router::new()
@@ -50,16 +41,19 @@ async fn main() {
         .route("/light_control", post(handle_light_control_request))
         .route("/states", get(light_states))
         .with_state(shared_light_states.clone()) // for routes that need shared light states
-        .layer(validate_bearer) // for routes that require authorization
+        .layer(ValidateRequestHeaderLayer::bearer(AUTH_STR)) // for routes that require authorization, simple bearer checking
         .route("/legal", get(legal_info))
         // TODO: add metadata files
         .route("/logo.png", get_service(ServeFile::new("src/backend/metadata_files/logo.png")))
         .route("/openapi.yaml", get_service(ServeFile::new("src/backend/metadata_files/openapi.yaml")))
         .route("/.well-known/ai-plugin.json", get_service(ServeFile::new("src/backend/metadata_files/ai-plugin.json")))
-        // for all routes
-        .layer(limit_concurrency)
-        .layer(limit_body)
-        .layer(allow_cors)
+        // for all routes, simple defense against DoS attacks
+        .layer(ConcurrencyLimitLayer::new(128))
+        .layer(RequestBodyLimitLayer::new(1024 * 1024))// 1MB
+        // allow requests from any origin
+        .layer(CorsLayer::new()
+            .allow_methods([Method::GET, Method::POST])
+            .allow_origin(Any))
         .layer(TraceLayer::new_for_http());
 
     let listener = TcpListener::bind(format!("0.0.0.0:{}", args.port)).await.unwrap();
