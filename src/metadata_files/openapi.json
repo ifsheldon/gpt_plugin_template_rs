@@ -1,0 +1,197 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Light Control API",
+    "version": "1.0.0",
+    "description": "API to control and monitor light states."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:12345"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "LightColorRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "The action to perform to change the light color",
+            "enum": [
+              "ToRed",
+              "ToGreen",
+              "ToBlue",
+              "ToWhite",
+              "Reset"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "LightControlRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "The action to perform to control the light power state",
+            "enum": [
+              "TurnOn",
+              "TurnOff"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "LightStates": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string",
+            "enum": [
+              "Red",
+              "Green",
+              "Blue",
+              "White"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "On",
+              "Off"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/light_color": {
+      "post": {
+        "summary": "Set the light color",
+        "operationId": "setLightColor",
+        "tags": [
+          "Light Control"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LightColorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Light color changed successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/light_control": {
+      "post": {
+        "summary": "Control the light power state",
+        "operationId": "controlLightPower",
+        "tags": [
+          "Light Control"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LightControlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Light power state changed successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/states": {
+      "get": {
+        "summary": "Get the current light states",
+        "operationId": "getLightStates",
+        "tags": [
+          "Light Control"
+        ],
+        "responses": {
+          "200": {
+            "description": "Current light states",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LightStates"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    }
+  }
+}

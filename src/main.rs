@@ -43,9 +43,8 @@ async fn main() {
         .with_state(shared_light_states.clone()) // for routes that need shared light states
         .layer(ValidateRequestHeaderLayer::bearer(AUTH_STR)) // for routes that require authorization, simple bearer checking
         .route("/legal", get(legal_info))
-        // TODO: add metadata files
         .route("/logo.png", get_service(ServeFile::new("src/backend/metadata_files/logo.png")))
-        .route("/openapi.yaml", get_service(ServeFile::new("src/backend/metadata_files/openapi.yaml")))
+        .route("/openapi.json", get_service(ServeFile::new("src/backend/metadata_files/openapi.json")))
         .route("/.well-known/ai-plugin.json", get_service(ServeFile::new("src/backend/metadata_files/ai-plugin.json")))
         // for all routes, simple defense against DoS attacks
         .layer(ConcurrencyLimitLayer::new(128))
