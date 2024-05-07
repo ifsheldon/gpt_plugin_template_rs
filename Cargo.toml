@@ -15,7 +15,7 @@ tokio = { version = "1", features = ["full"] }
 axum = "0.7"
 # For middlewares and services
 tower = { version = "0.4", features = ["limit"] }
-tower-http = { version = "0.5", features = ["auth", "cors", "limit", "fs", "trace"] }
+tower-http = { version = "0.5", features = ["auth", "cors", "limit", "fs", "trace", "set-header"] }
 # For tracing
 tracing = "0.1"
 tracing-subscriber = "0.3"

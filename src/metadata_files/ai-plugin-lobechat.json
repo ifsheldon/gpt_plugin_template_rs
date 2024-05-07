@@ -1,0 +1,21 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Light Control System",
+  "name_for_model": "Light Control System",
+  "description_for_human": "Control a light in your home",
+  "description_for_model": "Control a light in the user's home",
+  "auth": {
+    "type": "service_http",
+    "authorization_type": "bearer",
+    "verification_tokens": {
+      "openai": "Replace_this_string_with_the_verification_token_generated_in_the_ChatGPT_UI"
+    }
+  },
+  "api": {
+    "type": "openapi",
+    "url": "http://localhost:12345/lobechat/openapi.json" // TODO: Replace with the actual URL of the OpenAPI spec
+  },
+  "logo_url": "http://localhost:12345/logo.png", // TODO: Replace with the actual URL of the logo
+  "contact_email": "fl@reify.ing",  // TODO: Replace with the actual contact email
+  "legal_info_url": "http://localhost:12345/legal"  // TODO: Replace with the actual URL of the legal information
+}

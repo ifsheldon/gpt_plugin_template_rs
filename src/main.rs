@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use axum::http::Method;
+use axum::http::{header, HeaderValue, Method};
 use axum::Router;
 use axum::routing::{get, get_service, post};
 use clap::Parser;
@@ -9,6 +9,7 @@ use tower::limit::ConcurrencyLimitLayer;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::limit::RequestBodyLimitLayer;
 use tower_http::services::ServeFile;
+use tower_http::set_header::SetRequestHeaderLayer;
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 use tower_http::trace::TraceLayer;
 use tracing::{Level, span, error, info};
@@ -37,15 +38,22 @@ async fn main() {
 
     let shared_light_states = Arc::new(RwLock::new(get_or_default_light_states().await));
     let app = Router::new()
+        .route("/lobechat/light_color", post(handle_light_color_request))
+        .route("/lobechat/light_control", post(handle_light_control_request))
+        .layer(SetRequestHeaderLayer::overriding(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))) // specially for LobeChat due to https://github.com/lobehub/lobe-chat/issues/2216
         .route("/light_color", post(handle_light_color_request))
         .route("/light_control", post(handle_light_control_request))
         .route("/states", get(light_states))
         .with_state(shared_light_states.clone()) // for routes that need shared light states
         .layer(ValidateRequestHeaderLayer::bearer(AUTH_STR)) // for routes that require authorization, simple bearer checking
+        // metadata routes
         .route("/legal", get(legal_info))
-        .route("/logo.png", get_service(ServeFile::new("src/backend/metadata_files/logo.png")))
-        .route("/openapi.json", get_service(ServeFile::new("src/backend/metadata_files/openapi.json")))
-        .route("/.well-known/ai-plugin.json", get_service(ServeFile::new("src/backend/metadata_files/ai-plugin.json")))
+        .route("/logo.png", get_service(ServeFile::new("src/metadata_files/logo.png")))
+        .route("/openapi.json", get_service(ServeFile::new("src/metadata_files/openapi.json")))
+        .route("/.well-known/ai-plugin.json", get_service(ServeFile::new("src/metadata_files/ai-plugin.json")))
+        // metadata for LobeChat
+        .route("/lobechat/openapi.json", get_service(ServeFile::new("src/metadata_files/openapi-lobechat.json")))
+        .route("/lobechat/.well-known/ai-plugin.json", get_service(ServeFile::new("src/metadata_files/ai-plugin-lobechat.json")))
         // for all routes, simple defense against DoS attacks
         .layer(ConcurrencyLimitLayer::new(128))
         .layer(RequestBodyLimitLayer::new(1024 * 1024))// 1MB
