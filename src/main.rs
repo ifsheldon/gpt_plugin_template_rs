@@ -21,7 +21,7 @@ mod utils;
 mod control;
 mod states;
 
-const AUTH_STR: &str = "Bearer asdfghjkl_light_control";
+const AUTH_STR: &str = "asdfghjkl_light_control";
 
 async fn legal_info() -> &'static str {
     "This is a sample server for the GPT Plugin tutorial"
