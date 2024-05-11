@@ -2,6 +2,7 @@ use std::sync::Arc;
 use axum::http::{header, HeaderValue, Method};
 use axum::Router;
 use axum::routing::{get, get_service, post};
+use accompany::bound;
 use clap::Parser;
 use tokio::net::TcpListener;
 use tokio::sync::RwLock;
@@ -32,9 +33,11 @@ async fn main() {
     let args = Args::parse();
     tracing_subscriber::fmt().with_max_level(Level::DEBUG).init();
     let span = span!(Level::INFO, "light_control_server");
-    let guard = span.enter();
-    info!("Starting light control server on port {}", args.port);
-    drop(guard); // drop the guard to prevent the span from being captured by the signal handler
+    bound!{
+        with _guard = span.enter() => {
+            info!("Starting light control server on port {}", args.port);
+        }
+    }
 
     let shared_light_states = Arc::new(RwLock::new(get_or_default_light_states().await));
     let app = Router::new()

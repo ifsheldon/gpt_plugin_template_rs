@@ -1,3 +1,4 @@
+use accompany::bound;
 use axum::extract::State;
 use axum::Json;
 use serde::{Deserialize, Serialize};
@@ -64,9 +65,11 @@ pub async fn handle_light_color_request(State(states): State<SharedLightStates>,
 pub async fn handle_light_control_request(State(states): State<SharedLightStates>,
                                           Json(request): Json<LightControlRequest>) -> String {
     info!("Light control request: {:?}", request);
-    let state = states.read().await;
-    let status = state.status;
-    drop(state);  // release the lock to avoid deadlock later
+    let status = bound! {
+        with state_guard = states.read().await => {
+            state_guard.status
+        }
+    };
     match (request.action, status) {
         (LightAction::TurnOn, LightStatus::On) => "The light is already on".to_string(),
         (LightAction::TurnOff, LightStatus::Off) => "The light is already off".to_string(),
