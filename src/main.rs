@@ -37,7 +37,7 @@ async fn main() {
         with _guard = span.enter() => {
             info!("Starting light control server on port {}", args.port);
         }
-    }
+    } // add scope to early drop the guard to prevent the span from being captured by the signal handler
 
     let shared_light_states = Arc::new(RwLock::new(get_or_default_light_states().await));
     let app = Router::new()

@@ -69,7 +69,7 @@ pub async fn handle_light_control_request(State(states): State<SharedLightStates
         with state_guard = states.read().await => {
             state_guard.status
         }
-    };
+    };  // add scope to early release the lock to avoid deadlock later
     match (request.action, status) {
         (LightAction::TurnOn, LightStatus::On) => "The light is already on".to_string(),
         (LightAction::TurnOff, LightStatus::Off) => "The light is already off".to_string(),
